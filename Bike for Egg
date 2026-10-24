@@ -1,0 +1,85 @@
+-- Bike For Egg | Refined Rarity Selector
+-- Add inside your existing UI script.
+-- Requires your existing makeButton() function.
+
+local RaritySystem = {}
+
+RaritySystem.Rarities = {
+    "Secret",
+    "Celestial",
+    "Divine",
+    "Mythic",
+    "Legendary",
+    "Epic",
+    "Rare",
+    "Uncommon",
+    "Common"
+}
+
+RaritySystem.Selected = "Secret"
+RaritySystem.RarestFirst = true
+
+local rarityRank = {}
+
+for index, rarity in ipairs(RaritySystem.Rarities) do
+    rarityRank[rarity] = index
+end
+
+-- Rarity selection button
+local rarityButton = makeButton("💎 RARITY: SECRET")
+
+rarityButton.Activated:Connect(function()
+    local currentIndex =
+        table.find(RaritySystem.Rarities, RaritySystem.Selected) or 1
+
+    currentIndex = currentIndex % #RaritySystem.Rarities + 1
+
+    RaritySystem.Selected = RaritySystem.Rarities[currentIndex]
+    rarityButton.Text = "💎 RARITY: " ..
+        string.upper(RaritySystem.Selected)
+end)
+
+-- Rarest-first toggle
+local rarestButton = makeButton("👑 RAREST FIRST: ON")
+
+rarestButton.Activated:Connect(function()
+    RaritySystem.RarestFirst = not RaritySystem.RarestFirst
+
+    rarestButton.Text = "👑 RAREST FIRST: " ..
+        (RaritySystem.RarestFirst and "ON" or "OFF")
+end)
+
+-- Sort discovered items by rarity
+function RaritySystem.Sort(items)
+    table.sort(items, function(a, b)
+        local rankA = rarityRank[a.Rarity] or math.huge
+        local rankB = rarityRank[b.Rarity] or math.huge
+
+        if rankA == rankB then
+            return tostring(a.Name) < tostring(b.Name)
+        end
+
+        if RaritySystem.RarestFirst then
+            return rankA < rankB
+        else
+            return rankA > rankB
+        end
+    end)
+
+    return items
+end
+
+-- Example usage:
+local exampleItems = {
+    {Name = "Common Egg", Rarity = "Common"},
+    {Name = "Legendary Egg", Rarity = "Legendary"},
+    {Name = "Secret Egg", Rarity = "Secret"}
+}
+
+RaritySystem.Sort(exampleItems)
+
+for _, item in ipairs(exampleItems) do
+    print(item.Name, item.Rarity)
+end
+
+return RaritySystem
